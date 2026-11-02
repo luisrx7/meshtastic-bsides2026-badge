@@ -1,40 +1,74 @@
-<div align="center" markdown="1">
+# Meshtastic for the BSides Lisboa 2026 badge
 
-<img src=".github/meshtastic_logo.png" alt="Meshtastic Logo" width="80"/>
-<h1>Meshtastic Firmware</h1>
+Turn the BSides Lisboa 2026 badge (ESP32-S3 + Ra-01SC LoRa) into a working [Meshtastic](https://meshtastic.org) node.
+This is a fork of [meshtastic/firmware](https://github.com/meshtastic/firmware) with a `bsides2026_badge` variant. It is not an official Meshtastic release.
 
-![GitHub release downloads](https://img.shields.io/github/downloads/meshtastic/firmware/total)
-[![CI](https://img.shields.io/github/actions/workflow/status/meshtastic/firmware/main_matrix.yml?branch=master&label=actions&logo=github&color=yellow)](https://github.com/meshtastic/firmware/actions/workflows/ci.yml)
-[![CLA assistant](https://cla-assistant.io/readme/badge/meshtastic/firmware)](https://cla-assistant.io/meshtastic/firmware)
-[![Fiscal Contributors](https://opencollective.com/meshtastic/tiers/badge.svg?label=Fiscal%20Contributors&color=deeppink)](https://opencollective.com/meshtastic/)
-[![Vercel](https://img.shields.io/static/v1?label=Powered%20by&message=Vercel&style=flat&logo=vercel&color=000000)](https://vercel.com?utm_source=meshtastic&utm_campaign=oss)
-[![MemBrowse](https://membrowse.com/badge.svg)](https://membrowse.com/public/meshtastic/firmware)
+> **Warning:** unlocking erases everything on the badge (contacts, Stegomatrix messages, high scores, the game firmware). It cannot be undone, and secure download mode and disabled JTAG are permanent: you can write the flash but never read it back. Final scores stay on the BSides website.
 
-<a href="https://trendshift.io/repositories/5524" target="_blank"><img src="https://trendshift.io/api/badge/repositories/5524" alt="meshtastic%2Ffirmware | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+## What you get
 
-</div>
+| Part | Function |
+|---|---|
+| LoRa Ra-01SC (LLCC68, 433 MHz) | Meshtastic radio, region EU_433, slot 4 for Meshtastic PT |
+| OLED + 4 touch pads | Menu: TP1 up (long = left), TP2 back, TP3 down (long = right), TP4 select |
+| WS2812B LED 1 | Air quality from the AGS10 (blue = starting, green good, yellow moderate, red poor) |
+| WS2812B LED 2 | Noise level from the PDM microphone (off when quiet, green / yellow / red as it gets louder) |
+| Both LEDs | Blink cyan for 6 s when a text message arrives |
+| SPA06, VEML6040, AGS10 | Temperature, pressure, light and air quality in the Meshtastic telemetry |
+| LSM6DS3 | Touch or shake the badge to wake the screen |
 
-</div>
+A received text message opens directly on the screen instead of showing a "New Message" banner.
 
-<div align="center">
-	<a href="https://meshtastic.org">Website</a>
-	-
-	<a href="https://meshtastic.org/docs/">Documentation</a>
-</div>
+## 1. Unlock the badge (once)
 
-## Overview
+You need a computer, a USB-C **data** cable (charge-only cables do not work) and a serial terminal at 115200 baud (Arduino IDE Serial Monitor, PuTTY, `screen` or `python -m serial.tools.miniterm`).
 
-This repository contains the official device firmware for Meshtastic, an open-source LoRa mesh networking project designed for long-range, low-power communication without relying on internet or cellular infrastructure. The firmware supports various hardware platforms, including ESP32, nRF52, RP2040/RP2350, and Linux-based devices.
+1. Plug in the badge and open its serial port (Windows: the COM port; Linux: `/dev/ttyACM0`; macOS: `/dev/cu.usbmodem*`). Press Enter and type `help`.
+2. Open the official page <https://bsl.arialives.com/unlock/> to get the unlock code for your badge.
+3. Type these commands in order, each confirmation within 60 seconds. The code is case-insensitive, dashes are optional, and the badge accepts one attempt every 3 seconds:
+   ```
+   unlock <your-code>
+   unlock confirm
+   unlock ERASE
+   ```
+   `ERASE` must be in capitals. The badge erases its data, disables flash encryption and resets. It stays silent until you flash new firmware.
 
-Meshtastic enables text messaging, location sharing, and telemetry over a decentralized mesh network, making it ideal for outdoor adventures, emergency preparedness, and remote operations.
+## 2. Flash Meshtastic
 
-### Get Started
+1. Install Python and esptool: `pip install esptool`
+2. Download both files from the [latest release](../../releases/latest) into one folder: `bsides2026-badge-meshtastic.merged.bin` and `flash_badge.py`.
+3. Put the badge in download mode: **hold the PIN 0 (IO0) button while plugging in the USB-C cable**.
+4. Run the script with your port:
+   ```
+   python flash_badge.py COM3
+   ```
+   (Linux: `/dev/ttyACM0`.) It takes about two minutes.
+5. Unplug the cable and plug it in again **without pressing any button**. On the first boot, pick the LoRa region (EU_433 for the 433 MHz module).
 
-- 🔧 **[Building Instructions](https://meshtastic.org/docs/development/firmware/build)** - Learn how to compile the firmware from source.
-- ⚡ **[Flashing Instructions](https://meshtastic.org/docs/getting-started/flashing-firmware/)** - Install or update the firmware on your device.
+### Why a script and not the plain esptool command
 
-Join our community and help improve Meshtastic! 🚀
+The official page flashes with
+`esptool --chip esp32s3 -p PORT --no-stub write-flash --no-compress 0x0 firmware.merged.bin`.
+That works for small images, but in secure download mode esptool cannot read the flash size, and writes beyond about 2.3 MB fail with "Failed to enter flash download mode". `flash_badge.py` adds `--flash-size 16MB` and writes the image in 256 KB blocks. If a flash is interrupted, start again from step 3 and rewrite the whole image: partial flashes leave "Checksum failed" boot errors.
 
-## Stats
+### Troubleshooting
 
-![Alt](https://repobeats.axiom.co/api/embed/8025e56c482ec63541593cc5bd322c19d5c0bdcf.svg "Repobeats analytics image")
+- **No port appears:** hold IO0 while plugging in the cable.
+- **Nothing on the screen after flashing:** unplug and replug the cable without pressing buttons.
+- **Flash fails halfway:** re-enter download mode and run the script again.
+
+## Build from source
+
+```
+pio run -e bsides2026-badge
+```
+
+The output is `.pio/build/bsides2026-badge/firmware-bsides2026-badge-*.factory.bin`. Merge it with `esptool --chip esp32s3 merge-bin -o badge.merged.bin --flash-mode dio --flash-freq 80m --flash-size 16MB 0x0 <factory.bin>`.
+The variant lives in `variants/esp32s3/bsides2026_badge/`. PlatformIO's `pioarduino` platform needs PlatformIO 6.2.0 or newer.
+
+## Hardware notes
+
+- I2C bus A (SDA 1, SCL 2): VEML6040 0x10, AGS10 0x1A, LSM6DS3 0x6A, SPA06 0x77. Bus B (SDA 47, SCL 48): OLED 0x3C.
+- Radio: NSS 10, SCK 12, MOSI 11, MISO 13, BUSY 14, DIO1 9, no reset pin, no TCXO.
+- WS2812B x2 on GPIO15, touch pads on GPIO5 to GPIO8, PDM microphone CLK 17 / DATA 18, IR receiver GPIO16.
+- The SPA06 temperature is calibrated with a fixed offset of -37.6 C against a 20 C room; the cause of the raw error was not found.
