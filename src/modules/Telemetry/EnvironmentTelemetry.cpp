@@ -127,6 +127,8 @@ extern void drawCommonHeader(OLEDDisplay *display, int16_t x, int16_t y, const c
 #if __has_include(<Adafruit_SPA06_003.h>)
 #include "Sensor/SPA06Sensor.h"
 #endif
+#include "Sensor/AGS10Sensor.h"
+#include "Sensor/VEML6040Sensor.h"
 
 #if __has_include(<Adafruit_TSL2561_U.h>)
 #include "Sensor/TSL2561Sensor.h"
@@ -291,6 +293,12 @@ void EnvironmentTelemetryModule::i2cScanFinished(ScanI2C *i2cScanner)
 #else
 #if HAS_SPA06 && __has_include(<Adafruit_SPA06_003.h>)
     addSensor<SPA06Sensor>(i2cScanner, ScanI2C::DeviceType::SPA06);
+#endif
+#ifdef HAS_AGS10
+    addSensor<AGS10Sensor>(i2cScanner, ScanI2C::DeviceType::AGS10);
+#endif
+#ifdef HAS_VEML6040
+    addSensor<VEML6040Sensor>(i2cScanner, ScanI2C::DeviceType::VEML6040);
 #endif
 #endif
 #endif

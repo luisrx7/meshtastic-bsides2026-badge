@@ -12,8 +12,15 @@
 #include "main.h"
 TextMessageModule *textMessageModule;
 
+#ifdef BADGE_LED_PIN
+extern volatile uint32_t badgeMsgMs; // read by the badge LED task (variant.cpp)
+#endif
+
 ProcessMessage TextMessageModule::handleReceived(const meshtastic_MeshPacket &mp)
 {
+#ifdef BADGE_LED_PIN
+    badgeMsgMs = millis();
+#endif
 #if defined(DEBUG_PORT) && !defined(DEBUG_MUTE)
     auto &p = mp.decoded;
     LOG_INFO("Received text msg from=0x%08x, id=0x%08x, msg=%.*s", mp.from, mp.id, p.payload.size, p.payload.bytes);

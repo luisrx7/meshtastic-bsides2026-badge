@@ -906,6 +906,14 @@ void ScanI2CTwoWire::scanPort(I2CPort port, uint8_t *address, uint8_t asize)
                         }
                     }
                 }
+#ifdef HAS_VEML6040
+                if (!readByteRegister(i2cBus, addr.address, 0x07, id) || id != 0x81) {
+                    // Neither a VEML7700 nor a BMM150 answered: on boards that declare it, this is the VEML6040 colour sensor
+                    logFoundDevice("VEML6040", (uint8_t)addr.address);
+                    type = VEML6040;
+                    break;
+                }
+#endif
                 logFoundDevice("VEML7700", (uint8_t)addr.address);
                 type = VEML7700;
                 break;
@@ -955,6 +963,12 @@ void ScanI2CTwoWire::scanPort(I2CPort port, uint8_t *address, uint8_t asize)
                 SCAN_SIMPLE_CASE(PCT2075_ADDR, PCT2075, "PCT2075", (uint8_t)addr.address);
                 SCAN_SIMPLE_CASE(SCD30_ADDR, SCD30, "SCD30", (uint8_t)addr.address);
             case CST328_ADDR:
+#ifdef HAS_AGS10
+                // Boards that declare an AGS10 gas sensor use this address for it, not for the touch controller or DS2482
+                logFoundDevice("AGS10", (uint8_t)addr.address);
+                type = AGS10;
+                break;
+#endif
                 // Check status register (0xF0) for DS284X status and one-wire reset
                 registerValue = getRegisterValue(ScanI2CTwoWire::RegisterLocation(addr, 0xF0), 1);
                 if (registerValue & 0x16) { // One-wire reset after power-on

@@ -2440,6 +2440,16 @@ bool Screen::isGamesFrameShown()
     return framesetInfo.positions.games != 255 && ui && ui->getUiState()->currentFrame == framesetInfo.positions.games;
 }
 
+void Screen::showTextMessageFrame()
+{
+    if (!ui)
+        return;
+    setFrames(FOCUS_PRESERVE);
+    if (framesetInfo.positions.textMessage != 255)
+        ui->switchToFrame(framesetInfo.positions.textMessage);
+    setFastFramerate();
+}
+
 void Screen::showHomeFrame()
 {
     if (!ui)

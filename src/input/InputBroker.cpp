@@ -18,6 +18,7 @@
 
 #if !MESHTASTIC_EXCLUDE_INPUTBROKER
 #include "input/ExpressLRSFiveWay.h"
+#include "input/TouchPads.h"
 #include "input/QuadratureEncoder.h"
 #include "input/RotaryEncoderImpl.h"
 #include "input/RotaryEncoderInterruptImpl1.h"
@@ -526,5 +527,8 @@ void InputBroker::Init()
 #endif
 #ifdef INPUTBROKER_EXPRESSLRSFIVEWAY_TYPE
     expressLRSFiveWayInput = new ExpressLRSFiveWay();
+#endif
+#ifdef INPUTBROKER_TOUCHPADS
+    touchPadsInput = new TouchPads();
 #endif
 }

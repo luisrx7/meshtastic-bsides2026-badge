@@ -1,5 +1,6 @@
 #include "LSM6DS3Sensor.h"
 #include "NodeDB.h"
+#include "detect/ScanI2CTwoWire.h"
 
 #if !defined(ARCH_STM32WL) && !MESHTASTIC_EXCLUDE_I2C && __has_include(<Adafruit_LSM6DS3TRC.h>)
 
@@ -7,7 +8,8 @@ LSM6DS3Sensor::LSM6DS3Sensor(ScanI2C::FoundDevice foundDevice) : MotionSensor::M
 
 bool LSM6DS3Sensor::init()
 {
-    if (sensor.begin_I2C(deviceAddress())) {
+    // The sensor can sit on the secondary bus (Wire1), so use the bus it was found on rather than the default Wire
+    if (sensor.begin_I2C(deviceAddress(), ScanI2CTwoWire::fetchI2CBus(device.address))) {
 
         // Default threshold of 2G, less sensitive options are 4, 8 or 16G
         sensor.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);

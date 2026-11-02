@@ -299,6 +299,7 @@ class Screen : public concurrency::OSThread
     // Meshtastic node" screen after a game is left idle. Home is optional, so when it is hidden this
     // falls back to the messages frame rather than staying put.
     void showHomeFrame();
+    void showTextMessageFrame(); // regenerates the frameset and jumps to the messages frame
 
     // True when the user is in the middle of something that must not be interrupted: a module (or
     // game) is holding the D-pad, or an interactive overlay (picker / text entry) is open. Callers

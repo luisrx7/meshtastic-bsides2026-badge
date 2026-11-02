@@ -1136,6 +1136,7 @@ std::vector<int> calculateLineHeights(const std::vector<std::string> &lines, con
 
 void handleNewMessage(OLEDDisplay *display, const StoredMessage &sm, const meshtastic_MeshPacket &packet)
 {
+    bool showMessageFrame = false;
     if (packet.from != 0) {
         hasUnreadMessage = true;
         const bool suppressBanner =
@@ -1225,8 +1226,13 @@ void handleNewMessage(OLEDDisplay *display, const StoredMessage &sm, const mesht
         // is still stored, its thread still selected below, and the unread indicator set, so nothing
         // is lost -- the user just sees it once they're done. (isInteractionBusy() subsumes the
         // modal-module check this guard used to make.)
-        if (!screen->isInteractionBusy() && !menuShowing && !suppressBanner)
+        if (!screen->isInteractionBusy() && !menuShowing && !suppressBanner) {
+#ifdef BADGE_LED_PIN
+            showMessageFrame = true; // the badge hangs on a wall: show the message itself instead of a banner
+#else
             screen->showSimpleBanner(banner, inThread ? 1000 : 3000);
+#endif
+        }
     }
 
     // Always focus into the correct conversation thread when a message with real text arrives
@@ -1234,6 +1240,8 @@ void handleNewMessage(OLEDDisplay *display, const StoredMessage &sm, const mesht
     if (msgText && msgText[0] != '\0') {
         setThreadFor(sm, packet);
     }
+    if (showMessageFrame && screen)
+        screen->showTextMessageFrame();
 
     // Reset scroll for a clean start
     resetScrollState();
