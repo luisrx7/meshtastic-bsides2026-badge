@@ -1,5 +1,5 @@
 // BSides Lisboa 2026 badge ("StegoMatrix Access Terminal", PCB 0275)
-// ESP32-S3-WROOM-1 N16R8 + Ra-01SC (SX1268, 433 MHz) + SSD1306 OLED. Pinout reverse-engineered, see HARDWARE.md.
+// ESP32-S3-WROOM-1 N16R8 + Ra-01SC (LLCC68, 433 MHz) or Ra-01SH (SX1262, 868 MHz) + SSD1306 OLED. Same pinout for both radios, the module is auto-detected. See HARDWARE.md.
 
 // Screen: SSD1306 128x64 on its own I2C bus
 #define USE_SSD1306
@@ -37,7 +37,7 @@
 #define TOUCHPAD_PINS 5, 6, 7, 8
 // IR receiver on GPIO16 (idles HIGH, pulses LOW). Not used by Meshtastic yet.
 
-// LoRa: Ra-01SC (SX1268). Crystal only, no TCXO. Internal RF switch driven by DIO2.
+// LoRa: Ra-01SC (LLCC68) or Ra-01SH (SX1262), crystal only, no TCXO, internal RF switch driven by DIO2. All three chip defines stay on so either module is detected.
 // NRESET was not found on any free GPIO; it is probably tied to EN or a pull-up.
 // The module is marked LLCC68 (SX126x family); enable every SX126x variant so the radio probe picks the one RadioLib accepts.
 #define USE_LLCC68

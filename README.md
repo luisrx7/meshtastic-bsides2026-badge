@@ -1,6 +1,6 @@
 # Meshtastic for the BSides Lisboa 2026 badge
 
-Turn the BSides Lisboa 2026 badge (ESP32-S3 + Ra-01SC LoRa) into a working [Meshtastic](https://meshtastic.org) node.
+Turn the BSides Lisboa 2026 badge (ESP32-S3 + Ra-01SC or Ra-01SH LoRa) into a working [Meshtastic](https://meshtastic.org) node.
 This is a fork of [meshtastic/firmware](https://github.com/meshtastic/firmware) with a `bsides2026_badge` variant. It is not an official Meshtastic release.
 
 > **Warning:** unlocking erases everything on the badge (contacts, Stegomatrix messages, high scores, the game firmware). It cannot be undone, and secure download mode and disabled JTAG are permanent: you can write the flash but never read it back. Final scores stay on the BSides website.
@@ -9,7 +9,7 @@ This is a fork of [meshtastic/firmware](https://github.com/meshtastic/firmware) 
 
 | Part | Function |
 |---|---|
-| LoRa Ra-01SC (LLCC68, 433 MHz) | Meshtastic radio, region EU_433, slot 4 for Meshtastic PT |
+| LoRa Ra-01SC (LLCC68, 433 MHz) or Ra-01SH (SX1262, 868 MHz) | Meshtastic radio, auto-detected. Region EU_433 (slot 4) or EU_868 (slot 1) for Meshtastic PT |
 | OLED + 4 touch pads | Menu: TP1 up (long = left), TP2 back, TP3 down (long = right), TP4 select |
 | WS2812B LED 1 | Air quality from the AGS10 (blue = starting, green good, yellow moderate, red poor) |
 | WS2812B LED 2 | Noise level from the PDM microphone (off when quiet, green / yellow / red as it gets louder) |
@@ -43,7 +43,7 @@ You need a computer, a USB-C **data** cable (charge-only cables do not work) and
    python flash_badge.py COM3
    ```
    (Linux: `/dev/ttyACM0`.) It takes about two minutes.
-5. Unplug the cable and plug it in again **without pressing any button**. On the first boot, pick the LoRa region (EU_433 for the 433 MHz module).
+5. Unplug the cable and plug it in again **without pressing any button**. On the first boot, pick the LoRa region that matches your module (EU_433 for the Ra-01SC, EU_868 for the Ra-01SH).
 
 ### Why a script and not the plain esptool command
 
@@ -69,6 +69,6 @@ The variant lives in `variants/esp32s3/bsides2026_badge/`. PlatformIO's `pioardu
 ## Hardware notes
 
 - I2C bus A (SDA 1, SCL 2): VEML6040 0x10, AGS10 0x1A, LSM6DS3 0x6A, SPA06 0x77. Bus B (SDA 47, SCL 48): OLED 0x3C.
-- Radio: NSS 10, SCK 12, MOSI 11, MISO 13, BUSY 14, DIO1 9, no reset pin, no TCXO.
+- Radio (same pinout for Ra-01SC and Ra-01SH): NSS 10, SCK 12, MOSI 11, MISO 13, BUSY 14, DIO1 9, no reset pin, no TCXO.
 - WS2812B x2 on GPIO15, touch pads on GPIO5 to GPIO8, PDM microphone CLK 17 / DATA 18, IR receiver GPIO16.
 - The SPA06 temperature is calibrated with a fixed offset of -37.6 C against a 20 C room; the cause of the raw error was not found.
